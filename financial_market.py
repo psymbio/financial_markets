@@ -9,12 +9,13 @@ import plotly.graph_objects as go
 
 def load_dataframe():
     """
-    This loads the dataframe.
+    This loads the dataframe and returns a dictionary with the key = symbol and value = sector the stock belongs to.
     Rules:
         1. Renamed for better indexing (removed spaces, lower case).
         2. Changed extra dates in brackets for AT&T to a single date.
         3. Take all the stocks present before the 2000s
         4. Take all the stocks which have a NaN in the date_first_added (because we don't know about the date when first added, so we'll collect the data on them and decide whether or not to include them later.)
+        5. Sort values by gics_sector so we get it sector wise.
     """
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
     df.columns = df.columns.str.replace(" ", "_")
@@ -24,7 +25,11 @@ def load_dataframe():
     df_nan = df[df['date_first_added'].isnull()]
     df_2000 = df[df['date_first_added'] < "2000-00-00"]
     df_concat = pd.concat([df_2000, df_nan], axis=0)
-    return df_concat
+    df_concat.sort_values(by=['gics_sector'], inplace=True)
+    df_sector_dict = dict(zip(df_concat.symbol, df_concat.gics_sector))
+    df_sector_dict_sorted = dict(sorted(df_sector_dict.items(), key=lambda kv: kv[1]))
+    symbols = [key for key in df_sector_dict_sorted]
+    return df_concat, df_sector_dict_sorted, symbols
 
 def get_closing_prices(symbols):
     """
