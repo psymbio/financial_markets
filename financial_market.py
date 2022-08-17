@@ -1,11 +1,14 @@
 import datetime
 import pandas as pd
+import numpy as np
 import yfinance as yf
 
 import mplfinance as mpf
 
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import seaborn as sns
+plt.rcParams["figure.figsize"] = (15, 15)
 
 def load_dataframe():
     """
