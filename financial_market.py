@@ -104,7 +104,7 @@ def get_closing_prices(symbols, df_sector_dict):
         # print(symbol)
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(start="2000-01-01",  end="2022-01-01")
+            hist = ticker.history(start="2000-01-01",  end="2022-06-01")
             hist.reset_index(drop=False, inplace=True)
             # print(hist.iloc[0]["Date"])
             if hist["Date"][0] != datetime.datetime(1999, 12, 31):
