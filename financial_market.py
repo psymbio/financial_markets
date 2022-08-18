@@ -8,17 +8,34 @@ import mplfinance as mpf
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import seaborn as sns
+import warnings
+warnings.filterwarnings("ignore")
 plt.rcParams["figure.figsize"] = (15, 15)
 
 def load_dataframe():
     """
     This loads the dataframe and returns a dictionary with the key = symbol and value = sector the stock belongs to.
+    
     Rules:
         1. Renamed for better indexing (removed spaces, lower case).
         2. Changed extra dates in brackets for AT&T to a single date.
         3. Take all the stocks present before the 2000s
         4. Take all the stocks which have a NaN in the date_first_added (because we don't know about the date when first added, so we'll collect the data on them and decide whether or not to include them later.)
         5. Sort values by gics_sector so we get it sector wise.
+    
+    Parameters
+    ----------
+    None
+    
+    Returns
+    -------
+    df_concat : pd.DataFreme
+        concatenated dataframe of the stocks to search for
+        this is a concatenation of all stocks present before the 2000s and those which didn't have a date present in them.
+    df_sector_dict_short_sorted : dict
+        dict of sectors stocks belong to
+    symbols : list
+        list of symbols to search for
     """
     df = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")[0]
     
@@ -61,11 +78,19 @@ def load_dataframe():
 def get_closing_prices(symbols, df_sector_dict):
     """
     This loads the closing prices of all stocks present before the 2000s in a single dataframe.
+    
+    Parameters
+    ----------
+    symbols : list
+        List of ticker values
+    df_sector_dict : dict
+        Dictionary of sectors the different stocks belong to.
+        
     Returns
     -------
-    df : pd.Dataframe
+    df : pd.DataFrame
         Closing prices of stocks by date.
-    not_done_for : List
+    not_done_for : list
         Symbols the data wasn't not collected for.
     """
     df = pd.DataFrame()
@@ -109,6 +134,18 @@ def get_closing_prices(symbols, df_sector_dict):
 def plot_candlesticks(symbol, plot_type = 1):
     """
     Downloads the data for a specific stock suymbol and plots the candlesticks for data in between 2000-01-01 and 2022-01-01.
+    
+    Parameters
+    ----------
+    symbol : str
+        Ticker value (example: 'AAPL')
+    plot_type : int
+        if 1 then uses mpf
+        else uses plotly
+    
+    Returns
+    -------
+    None
     """
     data = yf.download(tickers=symbol, start="2000-01-01",  end="2022-01-01")
     if plot_type == 1:
@@ -121,3 +158,79 @@ def plot_candlesticks(symbol, plot_type = 1):
                                              close=data['Close'])])
 
         fig.show()
+
+def ticker_val_locations(df, start = 1):
+    """
+    Get locations for ticker values
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+    start : int
+        if start == 1: then ticker values are plotted at the start
+        else ticker values are plotted in the center.
+    Returns
+    -------
+        dict_col : dict
+            dictionary that stores locations to plot the ticker values.
+    """
+    col_names = []
+    for element in list(df.columns):
+        col_names.append(element[:2])
+    dict_col = {}
+    i = 0
+    if start == 1:
+        for col in col_names:
+            i += 1
+            if col not in dict_col:
+                dict_col[col] = i
+    else:
+        for col in col_names:
+            i += 1
+            if col not in dict_col:
+                dict_col[col] = [i, i]
+            else:
+                dict_col[col][1] += 1
+
+        for key, value in dict_col.items():
+            dict_col[key] = (dict_col[key][0] + dict_col[key][1]) // 2
+    
+    return dict_col
+        
+def plot_corr_mat(df):
+    """
+    Takes dataframe to plot correlation matrix
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        dataframe to plot the correlation matrix for
+        
+    Returns
+    -------
+    None
+    """
+    dict_col = ticker_val_locations(df)
+    sns.heatmap(df.corr("pearson"))
+    plt.xticks(ticks=list(dict_col.values()), labels=list(dict_col.keys()))
+    plt.yticks(ticks=list(dict_col.values()), labels=list(dict_col.keys()))
+    plt.show()
+    
+def plot_all_charts(df):
+    """
+    Takes dataframe to plot all the charts in nx3 format.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+    
+    Returns
+    -------
+    None
+    """
+    fig, axes = plt.subplots(len(df.columns[1:])//3 + 1, 3, figsize=(20,len(df.columns[1:])//3 * 5))
+    df.head()
+    count = 0
+    for i in df.columns[1:]:
+        sns.lineplot(df["date"], df[i], ax=axes[count//3, count%3])
+        count += 1
