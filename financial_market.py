@@ -237,3 +237,44 @@ def plot_all_charts(df):
     for i in df.columns[1:]:
         sns.lineplot(df["date"], df[i], ax=axes[count//3, count%3])
         count += 1
+        
+def plot_all_charts_2(df):
+    """
+    Takes dataframe to plot all the charts in 3x3 format.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+    
+    Returns
+    -------
+    None
+    """
+    ticker_count = 1
+    col_list = df.columns[1:]
+    # for a in range(0, len(df.columns[1:])//9 + 1):
+    for a in range(0, 30):
+        fig = plt.figure(figsize=(13, 10))
+        outer = gridspec.GridSpec(3, 3, wspace=0.24, hspace=0)
+        try:
+            for i in range(9):
+                inner = gridspec.GridSpecFromSubplotSpec(1, 1,
+                                subplot_spec=outer[i], wspace=0, hspace=0)
+                for j in range(1):
+                    ax = plt.Subplot(fig, inner[j])
+                    ax.plot(df.iloc[:, 0], df.iloc[:, ticker_count])
+                    ticker_count += 1
+                    ax.set(ylabel=col_list[ticker_count])
+                    # t = ax.text(0., 0., col_list[ticker_count], horizontalalignment='center', verticalalignment='top', transform = ax.transAxes)
+                    if i in (8, 7, 6):
+                        ax.set_xticks(["2000", "2012", "2022"])
+                        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+                        # Rotates and right-aligns the x labels so they don't crowd each other.
+                        for label in ax.get_xticklabels(which='major'):
+                            label.set(rotation=30, horizontalalignment='right')
+                    else:
+                        ax.set_xticks([])
+                    fig.add_subplot(ax)
+            fig.show()
+        except:
+            pass
