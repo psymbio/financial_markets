@@ -6,6 +6,9 @@ import yfinance as yf
 import mplfinance as mpf
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import matplotlib.dates as mdates
+
 import plotly.graph_objects as go
 import seaborn as sns
 import warnings
